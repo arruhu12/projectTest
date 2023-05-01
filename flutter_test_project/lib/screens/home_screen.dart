@@ -7,6 +7,7 @@ import 'package:flutter_test_project/model/product_model.dart';
 import 'package:flutter_test_project/screens/product_detail_screen.dart';
 import 'package:flutter_test_project/services/product_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -25,6 +26,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List<Product> products = [];
   List<Product> displayedProducts = [];
   List<dynamic> displayedImages = [];
+
+  // Cart
+  List<String> product_list = [];
+  List<String> price_list = [];
+  List<String> qty_list = [];
+  List<String> image_list = [];
+  List<Widget> cart_widgets = [];
+  int subtotal = 0;
 
   // State For Navbar
   late AnimationController _fabAnimationController;
@@ -48,6 +57,54 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // State For Scrolling
   double spaceBetween = 10.0;
   final _duration = Duration(milliseconds: 200);
+
+  removeFromCart(int index) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    product_list.removeAt(index);
+    price_list.removeAt(index);
+    qty_list.removeAt(index);
+    image_list.removeAt(index);
+
+    prefs.setStringList("product_list", product_list);
+    prefs.setStringList("qty_list", qty_list);
+    prefs.setStringList("price_list", price_list);
+    prefs.setStringList("image_list", image_list);
+  }
+
+  void _cart_widget() {
+    cart_widgets = [];
+    product_list.forEach((element) {
+      cart_widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: ListTile(
+          leading: SizedBox(
+            width: 100,
+            child: Image.network(
+              image_list[product_list.indexOf(element)],
+              fit: BoxFit.fill,
+            ),
+          ),
+          title: Text(element),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Quantity: ${qty_list[product_list.indexOf(element)]}"),
+              Text("Price: \$${price_list[product_list.indexOf(element)]}"),
+              OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    removeFromCart(product_list.indexOf(element));
+                  });
+                  getCart();
+                },
+                child: Text("Remove"),
+              )
+            ],
+          ),
+        ),
+      ));
+    });
+  }
 
   _onStartScroll(ScrollMetrics metrics) {}
 
@@ -74,6 +131,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         increment = increment + 1;
       }
     });
+  }
+
+  getCart() async {
+    cart_widgets = [];
+    subtotal = 0;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    product_list = prefs.getStringList("product_list") ?? [];
+    price_list = prefs.getStringList("price_list") ?? [];
+    qty_list = prefs.getStringList("qty_list") ?? [];
+    image_list = prefs.getStringList("image_list") ?? [];
+
+    product_list.forEach((element) {
+      subtotal = subtotal +
+          int.tryParse(price_list[product_list.indexOf(element)])! *
+              int.tryParse(qty_list[product_list.indexOf(element)])!;
+    });
+    _cart_widget();
   }
 
   @override
@@ -197,6 +271,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                     onPressed: () {},
                                     child: Text("Shop Now"),
                                     style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Color(0xFFFF7F27)),
                                         shape: MaterialStateProperty.all<
                                                 RoundedRectangleBorder>(
                                             RoundedRectangleBorder(
@@ -435,12 +512,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ],
           ),
         )),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Color(0xFFFF7F27),
-          onPressed: () {},
-          tooltip: 'Increment',
-          child: const Icon(Icons.shopping_cart),
-        ),
+        floatingActionButton: Builder(builder: (context) {
+          return FloatingActionButton(
+            backgroundColor: Color(0xFFFF7F27),
+            onPressed: () {
+              getCart();
+              Scaffold.of(context).openDrawer();
+            },
+            tooltip: 'Open Cart',
+            child: const Icon(Icons.shopping_cart),
+          );
+        }),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: AnimatedBottomNavigationBar.builder(
           itemCount: iconList.length,
@@ -484,6 +566,86 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             blurRadius: 12,
             spreadRadius: 0.5,
             color: Color(0xFF474747),
+          ),
+        ),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          // Add a ListView to the drawer. This ensures the user can scroll
+          // through the options in the drawer if there isn't enough vertical
+          // space to fit everything.
+          child: Container(
+            height: MediaQuery.of(context).size.height,
+            child: Stack(
+              children: [
+                Column(
+                  // Important: Remove any padding from the ListView.
+
+                  children: [
+                    SizedBox(
+                      height: 100,
+                      child: DrawerHeader(
+                        margin: EdgeInsets.only(bottom: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: Text(
+                          "Shopping Cart",
+                          style: GoogleFonts.lato(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: MediaQuery.of(context).size.height - 100,
+                      child: ListView(
+                        children: cart_widgets,
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Subtotal",
+                              style: GoogleFonts.lato(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black)),
+                          Text("\$${subtotal}",
+                              style: GoogleFonts.lato(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black)),
+                        ],
+                      ),
+                    )),
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        child: Text("Shipping"),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Color(0xFFFF7F27)),
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(18.0)))),
+                      ),
+                    ))
+              ],
+            ),
           ),
         ),
       ),

@@ -43,6 +43,7 @@ dependencies:
   animated_bottom_navigation_bar: ^1.2.0
   numberpicker: ^2.1.2
   number_inc_dec: ^0.8.0
+  shared_preferences: ^2.1.0
 
 dev_dependencies:
   flutter_test:

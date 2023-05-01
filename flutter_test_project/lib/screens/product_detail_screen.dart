@@ -8,6 +8,7 @@ import 'package:flutter_test_project/services/product_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:number_inc_dec/number_inc_dec.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductDetailPage extends StatefulWidget {
   Product product;
@@ -21,7 +22,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     with TickerProviderStateMixin {
   late Product product;
   int _current = 0;
-  int _currentQty = 0;
+  TextEditingController _currentQty = TextEditingController();
   final CarouselController _controller = CarouselController();
 
   // State For Scrolling
@@ -41,12 +42,49 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     setState(() {});
   }
 
+  addToCart() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> product_list = [];
+    List<String> price_list = [];
+    List<String> qty_list = [];
+    List<String> image_list = [];
+    if (prefs.getStringList("product_list") != null) {
+      product_list = prefs.getStringList("product_list")!;
+    }
+    if (prefs.getStringList("price_list") != null) {
+      price_list = prefs.getStringList("price_list")!;
+    }
+    if (prefs.getStringList("qty_list") != null) {
+      qty_list = prefs.getStringList("qty_list")!;
+    }
+    if (prefs.getStringList("image_list") != null) {
+      image_list = prefs.getStringList("image_list")!;
+    }
+    product_list.add(widget.product.title);
+    price_list.add(widget.product.price.toString());
+    qty_list.add(_currentQty.text);
+    image_list.add(widget.product.thumbnail);
+
+    prefs.setStringList("product_list", product_list);
+    prefs.setStringList("price_list", price_list);
+    prefs.setStringList("qty_list", qty_list);
+    prefs.setStringList("image_list", image_list);
+
+    print("CURRENTLY IN CART");
+    product_list.forEach((element) {
+      print(element);
+      print(price_list[product_list.indexOf(element)]);
+      print(qty_list[product_list.indexOf(element)]);
+      print(image_list[product_list.indexOf(element)]);
+      print("----------------------------");
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     product = widget.product;
-    print(product.images[0]);
   }
 
   @override
@@ -152,6 +190,22 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                       ],
                     ),
                   ),
+                  Positioned(
+                    child: RawMaterialButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      elevation: 2.0,
+                      fillColor: Colors.white,
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 30.0,
+                      ),
+                      padding: EdgeInsets.all(10),
+                      shape: CircleBorder(),
+                    ),
+                    top: 10,
+                  )
                 ],
               ),
 
@@ -233,15 +287,20 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                 Container(
                   width: 100,
                   child: NumberInputWithIncrementDecrement(
-                    controller: TextEditingController(),
+                    controller: _currentQty,
                     min: 1,
                   ),
                 ),
                 ConstrainedBox(
                   constraints: BoxConstraints.tightFor(width: 250, height: 60),
                   child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            Color(0xFFFF7F27))),
                     child: Text('ADD TO CART'),
-                    onPressed: () {},
+                    onPressed: () async {
+                      addToCart();
+                    },
                   ),
                 ),
               ],
