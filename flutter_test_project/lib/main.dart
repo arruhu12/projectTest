@@ -17,10 +17,14 @@ class MyApp extends StatelessWidget {
       builder: (context, value, g) {
         return MaterialApp(
           initialRoute: '/',
-          darkTheme: ThemeData.dark(),
+          darkTheme: ThemeData.light(),
           themeMode: ThemeMode.values.toList()[value as int],
           debugShowCheckedModeBanner: false,
-          routes: {'/': (ctx) => MyHomePage(title: "Home")},
+          routes: {
+            '/': (ctx) => ScrollConfiguration(
+                behavior: const ScrollBehavior().copyWith(overscroll: false),
+                child: MyHomePage(title: ""))
+          },
         );
       },
       valueListenable: themeMode,
