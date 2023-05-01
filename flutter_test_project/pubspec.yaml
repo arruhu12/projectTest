@@ -41,6 +41,8 @@ dependencies:
   flutter_emoji: ^2.4.0
   auto_size_text: ^3.0.0
   animated_bottom_navigation_bar: ^1.2.0
+  numberpicker: ^2.1.2
+  number_inc_dec: ^0.8.0
 
 dev_dependencies:
   flutter_test:

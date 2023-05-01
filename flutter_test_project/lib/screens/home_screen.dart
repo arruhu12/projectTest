@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:flutter_test_project/model/product_model.dart';
+import 'package:flutter_test_project/screens/product_detail_screen.dart';
 import 'package:flutter_test_project/services/product_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -290,44 +291,59 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                   ),
                                   items: displayedProducts
                                       .map(
-                                        (item) => Stack(
-                                          children: [
-                                            Center(
-                                                child: Image.network(
-                                                    item.thumbnail,
-                                                    fit: BoxFit.cover,
-                                                    width: 1000)),
-                                            Container(
-                                              width: 1000,
-                                              color:
-                                                  Colors.black.withOpacity(0.4),
-                                            ),
-                                            Positioned(
-                                                bottom: 20,
-                                                left: 20,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      item.title,
-                                                      style: GoogleFonts.lato(
-                                                          fontSize: 25,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          color: Colors.white),
-                                                    ),
-                                                    Text(
-                                                      "\$ ${item.price}",
-                                                      style: GoogleFonts.lato(
-                                                          fontSize: 25,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          color: Colors.white),
-                                                    )
-                                                  ],
-                                                ))
-                                          ],
+                                        (item) => GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ProductDetailPage(
+                                                        product: item,
+                                                      )),
+                                            );
+                                          },
+                                          child: Stack(
+                                            children: [
+                                              Center(
+                                                  child: Image.network(
+                                                      item.thumbnail,
+                                                      fit: BoxFit.cover,
+                                                      width: 1000)),
+                                              Container(
+                                                width: 1000,
+                                                color: Colors.black
+                                                    .withOpacity(0.4),
+                                              ),
+                                              Positioned(
+                                                  bottom: 20,
+                                                  left: 20,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        item.title,
+                                                        style: GoogleFonts.lato(
+                                                            fontSize: 25,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color:
+                                                                Colors.white),
+                                                      ),
+                                                      Text(
+                                                        "\$ ${item.price}",
+                                                        style: GoogleFonts.lato(
+                                                            fontSize: 25,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color:
+                                                                Colors.white),
+                                                      )
+                                                    ],
+                                                  ))
+                                            ],
+                                          ),
                                         ),
                                       )
                                       .toList(),
